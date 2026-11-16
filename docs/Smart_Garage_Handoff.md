@@ -10,7 +10,7 @@ Use this brief as context for continuing the CEDT Embedded Systems miniature Sma
 - **IR is back in the design as an IR obstacle (reflective) sensor**, not a break-beam pair. It sits on the Gateway as an extra sensor type (protecting M1 if the camera slips) and is planned for door-path obstruction detection and/or the E2 ISR input. Reflective sensors have short range and react to ambient light and dark surfaces, so tune the potentiometer on the actual model.
 - Next milestone: checkpoint video, Fri 20 Nov 2026 (sensor node → gateway → cloud → dashboard). Prioritise UART + Google Sheets + a basic dashboard first, and bench-test the camera alongside.
 - Recommended E items: E1, E2, E4, E5, E7 (E7 counts on the Gateway per FAQ #4), with E6 as a spare. E3 is a poor fit for an always-on garage. Explain any change from the proposal in the report.
-- Notes still open: on the N8R8, GPIO35–37 are used by the PSRAM, so map all pins on paper first. A browser dashboard needs MQTT over WSS. Scalability: plan either a second physical node on UART2 or 2 simulated nodes, with the node ID in every message.
+- Notes still open: on the N16R8, GPIO35–37 are used by the PSRAM, so map all pins on paper first. A browser dashboard needs MQTT over WSS. Scalability: plan either a second physical node on UART2 or 2 simulated nodes, with the node ID in every message.
 
 ## Goal and current status
 
@@ -20,7 +20,7 @@ Build a tabletop garage that opens a sliding door for an enrolled person, shows 
 
 | Part | Design |
 |---|---|
-| Gateway | ESP32-S3-DevKitC-1-N8R8. Receives UART data, reads both ultrasonic sensors and the IR obstacle sensor, runs local Face Recognition, controls the door servo, and connects to cloud services. |
+| Gateway | ESP32-S3 N16R8 (16 MB flash, 8 MB octal PSRAM). Receives UART data, reads both ultrasonic sensors and the IR obstacle sensor, runs local Face Recognition, controls the door servo, and connects to cloud services. |
 | Sensor Node | Separate ESP32 DOIT DevKit. Reads LDR, DHT22 and ENS160. Controls the LED based on ambient light and sends readings to the Gateway over wired UART. Confirm actual sensor availability before finalizing the BOM. |
 | Entrance and parking | One ultrasonic sensor at the entrance detects approach and triggers image capture. A second ultrasonic sensor inside checks bay occupancy. An IR obstacle sensor is planned for door-path obstruction detection (see status update). Occupancy is a separate measurement from doorway clearance. |
 | Camera and AI | OV2640 DVP camera on the ESP32-S3. Planned ESP-WHO pipeline detects a face, extracts an embedding, compares it with enrolled users, and gives the result to door control. No cloud inference. Plate recognition was superseded. Liveness detection is outside the current prototype scope. |

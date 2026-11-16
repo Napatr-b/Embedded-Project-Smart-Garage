@@ -1,6 +1,6 @@
 # Imported dashboard and Gateway
 
-Local smart-garage source was mapped to the team layout: web/ -> dashboard/, firmware/gateway/ -> gateway/. Tools and integration docs are included. Original Gateway skeleton and dashboard README are preserved in docs/archive/. sensor-node/, shared/, cloud/ and existing team docs were preserved.
+Local smart-garage source was mapped to the team layout: web/ -> dashboard/, firmware/gateway/ -> gateway/. Tools and integration docs are included. The original Gateway skeleton (UART receive + ACK) is in git history (commit 345bbed, gateway/src/main.c). sensor-node/, shared/, cloud/ and existing team docs were preserved.
 
 ## Run
 

@@ -38,5 +38,4 @@ tmp/
 .vscode/
 gateway/sdkconfig.*
 !gateway/sdkconfig.defaults
-!gateway/sdkconfig.n16r8.defaults
 gateway/dependencies.lock

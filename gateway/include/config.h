@@ -19,6 +19,4 @@
 #if GARAGE_LOCAL_TEST && !GARAGE_SIMULATED_HARDWARE
 #error Local test transport requires simulated hardware with actuators disabled
 #endif
-// Real actuator mode is intentionally not implemented until wiring/interlocks are agreed.
-constexpr bool kRealActuatorEnabled = false;
 #include "contract.generated.h"

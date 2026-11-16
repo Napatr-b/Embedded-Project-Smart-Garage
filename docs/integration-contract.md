@@ -2,7 +2,7 @@
 
 เอกสารนี้เป็น **ร่างเสนอทีม** ไม่ใช่ contract ที่กลุ่มอนุมัติแล้ว ใช้ร่างเดียวกันใน Web และ Gateway รอบนี้ยังไม่มี credentials / wiring / feedback ที่ยืนยันสำหรับอุปกรณ์จริง
 
-แทนร่าง v0.1 เดิม (เก็บใน `integration-contract-v0.1.archive.md`) การเพิ่ม envelope v1 เป็น breaking change: packet เก่าที่ไม่มี deviceId/schemaVersion จะถูกปฏิเสธ เพื่อไม่แสดงข้อมูลอุปกรณ์ผิดตัว
+แทนร่าง v0.1 เดิม (ดูใน git history) การเพิ่ม envelope v1 เป็น breaking change: packet เก่าที่ไม่มี deviceId/schemaVersion จะถูกปฏิเสธ เพื่อไม่แสดงข้อมูลอุปกรณ์ผิดตัว
 
 ## ข้อกำหนดที่ยืนยันและเรื่องที่ยังไม่ยืนยัน
 
@@ -162,11 +162,11 @@ ACK/NACK กลับเป็น JSON+CRC framing เดียวกัน:
 
 เสนอ ACK timeout 200 ms, retry สูงสุด 3 ครั้งด้วย nodeId/seq เดิม (รวมส่งครั้งแรกเป็น 4 attempts) checksum ผิดให้ NACK เมื่อทราบ nodeId/seq อย่างเชื่อถือได้ มิฉะนั้นทิ้งและรอ retry Gateway จำ seq ต่อ node ตอบ ACK ซ้ำแต่ไม่บันทึกซ้ำ Node ต้องตกลง bootId/seq wrap หรือ reset session handshake เพื่อไม่สับสนเมื่อ reboot Gateway เพิ่ม UTC timestamp หลังตรวจ CRC ผ่าน หากเวลาไม่ sync ให้พักเป็นข้อมูลไม่มีเวลา/monotonic ใน buffer แล้วตกลงวิธี backfill ห้ามแต่งเวลาสด
 
-รอบนี้มี `SensorUart` interface และ disabled adapter เท่านั้น ยังไม่มี UART read/checksum/retry runtime เอกสารนี้เป็นร่างที่จะให้เพื่อนนำไปตกลงก่อน implement
+UART ใช้ binary frame ตาม `shared/protocol/garage_protocol.h` และ [protocol.md](protocol.md) (ไม่ใช่ JSON) Gateway รับใน `gateway/src/node_link.cpp` แล้วเติมค่าเข้า telemetry (`distanceCm`, temperature ฯลฯ) เมื่อไม่ได้อยู่ในโหมด simulated
 
 ## Google Sheets, LINE และ authentication
 
-Web history interface เดิม: `load(): Promise<{source,events,samples}>`; demo ใช้ mock ใน RAM, MQTT ใช้ unconfigured adapter ไม่เรียก Google Sheets. Gateway มี `HistorySink` / `NotificationSink` disabled interfaces และ config endpoint ตัวอย่าง ไม่มี HTTPS call จริงในรอบนี้
+Web history interface เดิม: `load(): Promise<{source,events,samples}>`; demo ใช้ mock ใน RAM, MQTT ใช้ unconfigured adapter ไม่เรียก Google Sheets. Gateway ยังไม่มี history/LINE sink มีแค่ config endpoint ตัวอย่าง ไม่มี HTTPS call จริงในรอบนี้
 
 เส้นทางที่เสนอ: Gateway → HTTPS endpoint ของทีม → เขียน raw readings/Event Log ลง Sheets; เว็บอ่าน read-only backend ที่ตรวจสิทธิ์ จำกัดจำนวน และจัดการ CORS Backend หรือ Gateway ส่ง LINE Messaging API พร้อม cooldown กันซ้ำ เก็บ token/key ฝั่ง server หรือ credential store ของอุปกรณ์ที่ออกแบบแล้ว ไม่ส่งให้ browser
 

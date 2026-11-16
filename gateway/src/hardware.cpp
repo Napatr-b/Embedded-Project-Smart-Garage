@@ -1,5 +1,5 @@
 #include "hardware.h"
-#include "pins.h"
+#include "node_link.h"
 namespace garage {
 SensorSnapshot sampleHardware(bool simulated, int64_t ms) {
   SensorSnapshot s;
@@ -14,6 +14,10 @@ SensorSnapshot sampleHardware(bool simulated, int64_t ms) {
     s.eco2Ppm = 540;
     s.distanceCm = 180;
     s.occupied = 0;
+  } else {
+    // Real data: whatever the sensor node sent recently over UART. Gateway-side sensors
+    // (bay ultrasonic, IR) will be added here when their drivers exist.
+    node_link::fill(s, ms);
   }
   return s;
 }

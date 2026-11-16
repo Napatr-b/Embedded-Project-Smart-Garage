@@ -2,7 +2,7 @@
 
 Map everything on paper before wiring. Update `gateway/include/pins.h` and `sensor-node/include/pins.h` to match.
 
-## Gateway: ESP32-S3-DevKitC-1-N8R8
+## Gateway: ESP32-S3 N16R8
 
 Reserved: GPIO35-37 (PSRAM), 19/20 (USB), 43/44 (UART0 console), 0/3/45/46 (strapping).
 
@@ -26,5 +26,6 @@ Reserved: GPIO35-37 (PSRAM), 19/20 (USB), 43/44 (UART0 console), 0/3/45/46 (stra
 | LDR (divider) | 34 | ADC1, input-only |
 | ENS160 SDA / SCL | 21 / 22 | I2C |
 | LED | 25 | via resistor/transistor |
+| Ultrasonic (HC-SR04) TRIG / ECHO | 26 / 27 | bring-up test sensor. ECHO is 5 V: divider 1k (ECHO→GPIO27) + 2k (GPIO27→GND). VCC from VIN (5 V) |
 
 Both boards must share GND.

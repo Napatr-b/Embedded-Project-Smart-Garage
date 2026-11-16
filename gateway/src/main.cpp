@@ -1,99 +1,88 @@
+// Smart Garage Gateway (ESP32-S3 N16R8, ESP-IDF)
+//
+// Each feature lives in its own file:
+//   node_link.cpp        UART from the sensor node: frames, ACK, dedupe, loss count (own task)
+//   hardware.cpp         one SensorSnapshot: simulated values or real node data
+//   door_controller.cpp  door state machine, movement timeout, command replay guard
+//   network.cpp          Wi-Fi, SNTP, MQTT over TLS, Last Will
+//   protocol.cpp         JSON envelope + command parsing/validation
+//   reporting.cpp        publishes telemetry / status / ack / event
+// This file: startup checks, then the main loop (network events, commands, door tick, heartbeat).
 #include "config.h"
 #include "door_controller.h"
-#include "hardware.h"
 #include "network.h"
+#include "node_link.h"
 #include "protocol.h"
-#include "pins.h"
-#include "esp_log.h"
-#include "esp_chip_info.h"
+#include "reporting.h"
 #include "esp_flash.h"
+#include "esp_log.h"
 #include "esp_psram.h"
-#include "esp_heap_caps.h"
+#include "esp_system.h"
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include <cstdlib>
-#include <ctime>
-#include <cstdio>
 #include <cstring>
+#include <ctime>
 using namespace garage;
 static DoorController door(GARAGE_SIMULATED_HARDWARE);
 static CommandGuard guard;
 static bool online = false;
 static int64_t sessionStart = 0;
-static void send(const char *topic, cJSON *p, bool retain = false) {
-  if (!p)
+
+static void event(const char *type, const char *message) { reporting::event(type, message, online); }
+
+// Validates a dashboard command and hands it to the door. Every outcome is ACKed.
+static void handleCommand(const NetworkMessage &msg, int64_t mono) {
+  Command c{};
+  const char *invalid = parseCommand(msg.payload, msg.length, c);
+  if (invalid) {
+    if (c.id[0])
+      reporting::ack(c.id, "rejected", invalid);
+    event("INVALID_COMMAND", invalid);
     return;
-  char *json = cJSON_PrintUnformatted(p);
-  if (json) {
-    network::publish(topic, json, retain);
-    free(json);
   }
-  cJSON_Delete(p);
-}
-static void ack(const char *id, const char *status, const char *reason = nullptr) {
-  if (!id || !id[0])
+  reporting::ack(c.id, "received");
+  const char *reason = guard.check(c, msg.retained, clockSynced(), utcMs());
+  if (!reason && (!online || c.sentMs < sessionStart))
+    reason = "not_current_connection";
+  if (reason) {
+    reporting::ack(c.id, "rejected", reason);
     return;
-  auto *p = envelope();
-  cJSON_AddStringToObject(p, "commandId", id);
-  cJSON_AddStringToObject(p, "status", status);
-  if (reason)
-    cJSON_AddStringToObject(p, "reason", reason);
-  send("ack", p);
-}
-static void event(const char *type, const char *message) {
-  ESP_LOGI("garage", "%s: %s", type, message);
-  if (!online)
+  }
+  guard.remember(c);
+  if (GARAGE_SIMULATED_HARDWARE && door.state() != Door::Fault && door.pendingId()[0])
+    reporting::ack(door.pendingId(), "rejected", "superseded_by_command");
+  reason = door.request(c, mono);
+  if (reason) {
+    reporting::ack(c.id, "rejected", reason);
     return;
-  auto *p = envelope();
-  cJSON_AddStringToObject(p, "type", type);
-  cJSON_AddStringToObject(p, "message", message);
-  send("event", p);
+  }
+  reporting::ack(c.id, "accepted");
+  event("COMMAND_ACCEPTED", c.action);
+  if (!strcmp(c.action, "stop")) {
+    reporting::ack(c.id, "completed", "simulated_stopped");
+    reporting::telemetry(door, mono, c.id);
+  } else
+    reporting::telemetry(door, mono);
 }
-static void number(cJSON *p, const char *name, double value) {
-  if (std::isfinite(value))
-    cJSON_AddNumberToObject(p, name, value);
-  else
-    cJSON_AddNullToObject(p, name);
+
+// Refuses to start when flash/PSRAM don't match the build, so a wrong board/sdkconfig is caught early.
+static bool checkMemory() {
+  uint32_t flash = 0;
+  esp_flash_get_size(nullptr, &flash);
+  const size_t psram = esp_psram_is_initialized() ? esp_psram_get_size() : 0;
+  ESP_LOGI("garage", "Smart Garage | ESP-IDF %s | schema %d", esp_get_idf_version(), kSchemaVersion);
+  ESP_LOGI("garage", "Flash=%lu bytes expected=%u; PSRAM=%u bytes expected=8388608",
+           static_cast<unsigned long>(flash), unsigned(GARAGE_EXPECTED_FLASH_BYTES),
+           static_cast<unsigned>(psram));
+  if (flash != GARAGE_EXPECTED_FLASH_BYTES || psram != 8388608) {
+    ESP_LOGE("garage", "MEMORY MISMATCH: verify module label, power and Octal sdkconfig before "
+                       "hardware integration");
+    return false;
+  }
+  return true;
 }
-static void report(int64_t ms, const char *confirmedCommand = nullptr) {
-  auto *status = envelope();
-  cJSON_AddBoolToObject(status, "online", true);
-  send("status", status, true);
-  auto s = sampleHardware(GARAGE_SIMULATED_HARDWARE, ms);
-  auto *p = envelope();
-  const char *name = doorName(door.state());
-  if (name)
-    cJSON_AddStringToObject(p, "door", name);
-  else
-    cJSON_AddNullToObject(p, "door");
-  if (GARAGE_SIMULATED_HARDWARE) cJSON_AddNumberToObject(p, "doorPosition", door.position());
-  else cJSON_AddNullToObject(p, "doorPosition");
-  number(p, "temperature", s.temperature);
-  number(p, "humidity", s.humidity);
-  number(p, "ldrRaw", s.ldrRaw);
-  number(p, "aqi", s.aqi);
-  number(p, "tvocPpb", s.tvocPpb);
-  number(p, "eco2Ppm", s.eco2Ppm);
-  number(p, "distanceCm", s.distanceCm);
-  if (s.occupied < 0)
-    cJSON_AddNullToObject(p, "occupied");
-  else
-    cJSON_AddBoolToObject(p, "occupied", s.occupied);
-  if (s.ledOn < 0)
-    cJSON_AddNullToObject(p, "ledOn");
-  else
-    cJSON_AddBoolToObject(p, "ledOn", s.ledOn);
-  if (confirmedCommand)
-    cJSON_AddStringToObject(p, "commandId", confirmedCommand);
-  else if (door.pendingId()[0])
-    cJSON_AddStringToObject(p, "commandId", door.pendingId());
-  else
-    cJSON_AddNullToObject(p, "commandId");
-  cJSON_AddNullToObject(p, "commandedServoAngle");
-  cJSON_AddBoolToObject(p, "positionConfirmed", GARAGE_SIMULATED_HARDWARE);
-  cJSON_AddBoolToObject(p, "actuatorEnabled", false);
-  send("telemetry", p);
-}
+
 extern "C" void app_main() {
   setenv("TZ", "UTC0", 1);
   tzset();
@@ -103,20 +92,13 @@ extern "C" void app_main() {
     return;
   }
   ESP_ERROR_CHECK(nvs);
-  uint32_t flash = 0;
-  esp_flash_get_size(nullptr, &flash);
-  const size_t psram = esp_psram_is_initialized() ? esp_psram_get_size() : 0;
-  ESP_LOGI("garage", "Smart Garage | ESP-IDF %s | schema %d", esp_get_idf_version(),
-           kSchemaVersion);
-  ESP_LOGI("garage", "Flash=%lu bytes expected=%u; PSRAM=%u bytes expected=8388608",
-           static_cast<unsigned long>(flash), unsigned(GARAGE_EXPECTED_FLASH_BYTES), static_cast<unsigned>(psram));
-  if (flash != GARAGE_EXPECTED_FLASH_BYTES || psram != 8388608) {
-    ESP_LOGE("garage", "MEMORY MISMATCH: verify module label, power and Octal sdkconfig before "
-                       "hardware integration");
+  if (!checkMemory())
     return; // Do not start network/commands when physical memory does not match.
-  }
-  ESP_LOGW("garage", "MODE=%s | REAL ACTUATOR DISABLED | ESP-WHO DISABLED | GPIO UNASSIGNED",
-           GARAGE_SIMULATED_HARDWARE ? "SIMULATED_HARDWARE" : "BRINGUP_OR_MQTT_NO_HARDWARE");
+  ESP_LOGW("garage", "MODE=%s | REAL ACTUATOR DISABLED | ESP-WHO DISABLED",
+           GARAGE_SIMULATED_HARDWARE ? "SIMULATED_HARDWARE" : "REAL_SENSORS_VIA_NODE");
+
+  node_link::begin(); // runs in its own task; works with or without network
+
   QueueHandle_t queue = xQueueCreate(8, sizeof(NetworkMessage));
   if (!queue) {
     ESP_LOGE("garage", "Queue allocation failed");
@@ -129,6 +111,7 @@ extern "C" void app_main() {
     network::poll(mono);
     if (!network::mqttConnected())
       online = false;
+
     NetworkMessage msg{};
     while (xQueueReceive(queue, &msg, 0) == pdTRUE) {
       if (msg.kind == NetworkMessage::Connected) {
@@ -141,48 +124,19 @@ extern "C" void app_main() {
       } else if (msg.kind == NetworkMessage::Disconnected) {
         online = false;
       } else if (msg.kind == NetworkMessage::CommandData) {
-        Command c{};
-        const char *invalid = parseCommand(msg.payload, msg.length, c);
-        if (invalid) {
-          if (c.id[0])
-            ack(c.id, "rejected", invalid);
-          event("INVALID_COMMAND", invalid);
-          continue;
-        }
-        ack(c.id, "received");
-        const char *reason = guard.check(c, msg.retained, clockSynced(), utcMs());
-        if (!reason && (!online || c.sentMs < sessionStart))
-          reason = "not_current_connection";
-        if (reason) {
-          ack(c.id, "rejected", reason);
-          continue;
-        }
-        guard.remember(c);
-        if (GARAGE_SIMULATED_HARDWARE && door.state() != Door::Fault && door.pendingId()[0]) {
-          ack(door.pendingId(), "rejected", "superseded_by_command");
-        }
-        reason = door.request(c, mono);
-        if (reason) {
-          ack(c.id, "rejected", reason);
-          continue;
-        }
-        ack(c.id, "accepted");
-        event("COMMAND_ACCEPTED", c.action);
-        if (!strcmp(c.action, "stop")) {
-          ack(c.id, "completed", "simulated_stopped");
-          report(mono, c.id);
-        } else
-          report(mono);
+        handleCommand(msg, mono);
       }
     }
+
     if (const char *result = door.tick(mono, online)) {
       if (online) {
-        ack(door.pendingId(), !strcmp(result, "completed") ? "completed" : "rejected", result);
-        report(mono);
+        reporting::ack(door.pendingId(), !strcmp(result, "completed") ? "completed" : "rejected", result);
+        reporting::telemetry(door, mono);
       }
       event("MOVEMENT", result);
       door.clearPending();
     }
+
     if (mono - lastSerial >= 3000) {
       lastSerial = mono;
       ESP_LOGI("garage", "Heartbeat uptime=%lld ms wifi=%s mqtt=%s timeSynced=%s door=%s heap=%u",
@@ -193,7 +147,7 @@ extern "C" void app_main() {
     }
     if (online && mono - lastReport >= kHeartbeatMs) {
       lastReport = mono;
-      report(mono);
+      reporting::telemetry(door, mono);
     }
     vTaskDelay(pdMS_TO_TICKS(25));
   }

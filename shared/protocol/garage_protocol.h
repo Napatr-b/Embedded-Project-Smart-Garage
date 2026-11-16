@@ -6,7 +6,8 @@
  *   [SOF 0xA5][VER][TYPE][NODE_ID][SEQ lo][SEQ hi][LEN][PAYLOAD x LEN][CRC lo][CRC hi]
  * CRC16-CCITT (poly 0x1021, init 0xFFFF) over VER .. end of PAYLOAD.
  *
- * Node sends GP_MSG_READINGS; gateway answers GP_MSG_ACK with the same NODE_ID + SEQ.
+ * Node sends GP_MSG_READINGS / GP_MSG_ULTRASONIC; gateway answers GP_MSG_ACK with the same NODE_ID + SEQ.
+ * SEQ is one counter per node shared by all message types, so the gateway can count gaps as lost frames.
  * Node retries if no ACK arrives within the timeout (E4). The gateway drops
  * duplicates by remembering the last SEQ per NODE_ID.
  * See docs/protocol.md.
@@ -27,9 +28,10 @@ extern "C" {
 #define GP_MAX_NODES    8
 
 typedef enum {
-  GP_MSG_READINGS = 0x01,
-  GP_MSG_ACK      = 0x80,
-  GP_MSG_NACK     = 0x81,
+  GP_MSG_READINGS   = 0x01,
+  GP_MSG_ULTRASONIC = 0x02,
+  GP_MSG_ACK        = 0x80,
+  GP_MSG_NACK       = 0x81,
 } gp_msg_type_t;
 
 typedef struct __attribute__((packed)) {
@@ -41,6 +43,16 @@ typedef struct __attribute__((packed)) {
   uint8_t  aqi;            /* ENS160 AQI-UBA 1..5 */
   uint8_t  led_on;         /* lighting state */
 } gp_readings_t;
+
+enum {
+  GP_US_OK      = 0,
+  GP_US_NO_ECHO = 1,   /* nothing in range, or ECHO not wired */
+};
+
+typedef struct __attribute__((packed)) {
+  uint16_t distance_mm;    /* HC-SR04 distance; 0 when status != GP_US_OK */
+  uint8_t  status;         /* GP_US_OK / GP_US_NO_ECHO */
+} gp_ultrasonic_t;
 
 static inline uint16_t gp_crc16(const uint8_t *data, size_t len) {
   uint16_t crc = 0xFFFF;

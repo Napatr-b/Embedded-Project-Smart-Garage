@@ -75,9 +75,5 @@ public:
   // Returns completed / movement_timeout. Never infers real position from a servo angle.
   const char *tick(int64_t monotonicMs, bool connected);
   void clearPending() { pending_[0] = 0; }
-  void feedbackForTest(Door d) {
-    if (simulation_)
-      state_ = d;
-  }
 };
 } // namespace garage

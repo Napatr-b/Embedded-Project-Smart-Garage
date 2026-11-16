@@ -100,8 +100,9 @@ export function createDemo(emit, { now = () => performance.now() } = {}) {
         'COMMAND',
         c.action === 'open' ? 'กำลังเปิดประตูจำลอง' : 'กำลังปิดประตูจำลอง',
       );
-      movement = setInterval(() => {
-        if (!online) return;
+      // Guard with this timer's own id: a cleared interval must never complete a command again.
+      const id = setInterval(() => {
+        if (movement !== id || !online) return;
         advance();
         const done =
           data.doorPosition === (activeCommand.action === 'open' ? 100 : 0);
@@ -117,6 +118,7 @@ export function createDemo(emit, { now = () => performance.now() } = {}) {
             payload: { ...activeCommand, status: 'completed' },
           });
       }, 16);
+      movement = id;
     },
     simulate(action) {
       if (action === 'offline') {

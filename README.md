@@ -5,7 +5,7 @@ Miniature smart garage: a sliding door that opens for enrolled faces (on-device 
 ## Repository layout
 
 ```
-gateway/        ESP32-S3-DevKitC-1-N8R8, PlatformIO + ESP-IDF
+gateway/        ESP32-S3 N16R8, PlatformIO + ESP-IDF
 sensor-node/    ESP32 DOIT DevKit, PlatformIO + Arduino
 shared/         UART protocol shared by both firmwares
 cloud/          Google Apps Script (Sheets), MQTT / LINE notes
@@ -17,7 +17,7 @@ docs/           Design handoff, proposal, protocol, pin map, test plan
 
 1. Install VS Code + PlatformIO.
 2. Open `gateway/` or `sensor-node/` as a PlatformIO project, then Build / Upload.
-3. Copy `gateway/include/secrets.example.h` to `secrets.h` and fill it in. **Never commit secrets.**
+3. Copy `gateway/include/config.example.h` to `config.local.h` (git-ignored) and fill it in. **Never commit secrets.**
 
 ## Team
 

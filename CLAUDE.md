@@ -16,11 +16,11 @@ The submitted Thai proposal is `docs/Smart_Garage_Proposal_TH.pdf` (outdated in 
 
 | Part | Board / parts |
 |---|---|
-| Gateway | ESP32-S3-DevKitC-1-N8R8. UART RX from the node, 2× ultrasonic (entrance and bay occupancy), IR obstacle sensor (door path / E2 ISR), OV2640 DVP camera, door servo, Wi-Fi → cloud |
+| Gateway | ESP32-S3 N16R8 (16 MB flash, 8 MB octal PSRAM). UART RX from the node, 2× ultrasonic (entrance and bay occupancy), IR obstacle sensor (door path / E2 ISR), OV2640 DVP camera, door servo, Wi-Fi → cloud |
 | Sensor Node | ESP32 DOIT DevKit. LDR, DHT22, ENS160, LED lighting. Sends readings over wired UART |
 | Door | Sliding panel driven by a 180° positional servo via crank + rod (SG90 first, MG996R if needed) |
 
-Pin notes: on the N8R8, **GPIO35–37 are used by PSRAM**, so don't assign them. Map camera + UART + ultrasonics + IR + servo pins on paper before wiring.
+Pin notes: on the N16R8, **GPIO35–37 are used by PSRAM**, so don't assign them. Map camera + UART + ultrasonics + IR + servo pins on paper before wiring.
 
 ## Toolchain
 
@@ -55,11 +55,11 @@ Proposal submitted. Parts still being bought. **No code yet, nothing tested.** T
 ## Repo layout
 
 ```
-gateway/        PlatformIO, ESP-IDF (ESP32-S3). src/main.c has the FreeRTOS task skeleton
-sensor-node/    PlatformIO, Arduino (ESP32 DOIT). src/main.cpp sends READINGS with ACK/retry
+gateway/        PlatformIO, ESP-IDF (ESP32-S3), C++. One file per feature: node_link (UART), network (MQTT), door_controller, reporting...
+sensor-node/    PlatformIO, Arduino (ESP32 DOIT). One file per feature: link (UART ACK/retry), ultrasonic, env_sensors
 shared/protocol garage_protocol.h: UART frame, CRC16, parser (used by both firmwares)
 cloud/          apps-script/Code.gs (Sheets logger), MQTT/LINE notes
-dashboard/      Vercel web app (not started)
+dashboard/      React + Vite web app (demo mode + MQTT mode)
 docs/           handoff, proposal, protocol.md, pin-map.md (PROVISIONAL), test-plan.md
 ```
 
