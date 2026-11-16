@@ -1,0 +1,30 @@
+{
+  "name": "smart-garage",
+  "version": "1.0.0",
+  "description": "แดชบอร์ด Smart Garage สำหรับโครงงาน Embedded System",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test",
+    "format": "prettier --write src tests vite.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "mqtt": "^5.16.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.3.0",
+    "prettier": "^3.10.1",
+    "vite": "^8.3.8"
+  },
+  "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

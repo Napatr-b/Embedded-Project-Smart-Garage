@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-garage.invalid/draft/mqtt-v1.schema.json",
+  "title": "Smart Garage draft proposal v1 (not team-approved)",
+  "$defs": {
+    "base": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "deviceId",
+        "timestamp",
+        "timeSynced"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "deviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,48}$"
+        },
+        "timestamp": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "timeSynced": {
+          "type": "boolean"
+        },
+        "simulatedHardware": {
+          "type": "boolean"
+        },
+        "commandId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "telemetry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "required": [
+            "simulatedHardware"
+          ],
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "timeSynced": {
+              "const": true
+            },
+            "door": {
+              "enum": [
+                "Closed",
+                "Opening",
+                "Open",
+                "Closing",
+                "Fault",
+                null
+              ]
+            },
+            "temperature": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -40,
+              "maximum": 80
+            },
+            "humidity": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "ldrRaw": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "distanceCm": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "aqi": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 5
+            },
+            "tvocPpb": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "eco2Ppm": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "occupied": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ledOn": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "commandedServoAngle": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 180
+            },
+            "positionConfirmed": {
+              "type": "boolean"
+            },
+            "actuatorEnabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "required": [
+            "online"
+          ],
+          "properties": {
+            "online": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "online": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "timeSynced": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "command": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "required": [
+            "action",
+            "commandId"
+          ],
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+            },
+            "timeSynced": {
+              "const": true
+            },
+            "commandId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "action": {
+              "enum": [
+                "open",
+                "close",
+                "stop"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ack": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "required": [
+            "commandId",
+            "status"
+          ],
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "timeSynced": {
+              "const": true
+            },
+            "commandId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "status": {
+              "enum": [
+                "received",
+                "accepted",
+                "completed",
+                "rejected"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "event": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/base"
+        },
+        {
+          "required": [
+            "type",
+            "message"
+          ],
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "timeSynced": {
+              "const": true
+            },
+            "type": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

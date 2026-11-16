@@ -33,3 +33,8 @@ docs/           Design handoff, proposal, protocol, pin map, test plan
 
 - Third-party code and libraries: list here (e.g. ESP-WHO, Adafruit DHT).
 - AI tools used: list tools and which parts they helped with (required by section 4.6).
+
+
+## Dashboard / Gateway import
+
+See [import and run notes](docs/LOCAL-IMPORT.md) for the imported dashboard, N16R8 Gateway, local configuration exclusions, and integration limitations.

@@ -28,3 +28,15 @@ dist/
 Thumbs.db
 desktop.ini
 *.blend1
+
+# Imported dashboard/gateway local settings and generated outputs
+config.local.h
+external-services.env
+local-test/
+tmp/
+*.log
+.vscode/
+gateway/sdkconfig.*
+!gateway/sdkconfig.defaults
+!gateway/sdkconfig.n16r8.defaults
+gateway/dependencies.lock
