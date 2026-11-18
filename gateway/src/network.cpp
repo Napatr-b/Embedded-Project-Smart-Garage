@@ -1,6 +1,7 @@
 #include "network.h"
 #include "config.h"
 #include "protocol.h"
+#include "radio.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -85,13 +86,8 @@ void begin(QueueHandle_t queue) {
     ESP_LOGE("network", "Invalid deviceId");
     return;
   }
-  ESP_ERROR_CHECK(esp_netif_init());
-  ESP_ERROR_CHECK(esp_event_loop_create_default());
-  esp_netif_create_default_wifi_sta();
-  wifi_init_config_t init = WIFI_INIT_CONFIG_DEFAULT();
-  ESP_ERROR_CHECK(esp_wifi_init(&init));
-  // Test credentials stay in RAM; do not overwrite saved Wi-Fi config in NVS.
-  ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+  // Wi-Fi driver may already be running for ESP-NOW (node_link starts first); start() is idempotent.
+  radio::start();
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifiEvent, nullptr));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifiEvent, nullptr));
   wifi_config_t wifi{};
@@ -99,9 +95,7 @@ void begin(QueueHandle_t queue) {
   strncpy(reinterpret_cast<char *>(wifi.sta.password), GARAGE_WIFI_PASSWORD,
           sizeof(wifi.sta.password));
   wifi.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi));
-  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi)); // connect happens in poll()
   esp_sntp_config_t ntp = ESP_NETIF_SNTP_DEFAULT_CONFIG(GARAGE_SNTP_SERVER);
   ntp.sync_cb = [](timeval *) { markTimeSynchronized(); };
   ESP_ERROR_CHECK(esp_netif_sntp_init(&ntp));

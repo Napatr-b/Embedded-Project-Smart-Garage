@@ -3,6 +3,7 @@
  * GPIO34-39 are input-only (good for LDR on ADC1). Avoid ADC2 pins: they can't be used while Wi-Fi is on (OTA/E6). */
 #define PIN_LINK_RX   16   /* UART2 RX  <- gateway TX (GPIO17) */
 #define PIN_LINK_TX   17   /* UART2 TX  -> gateway RX (GPIO18) */
+#define PIN_LINK_LED  2    /* onboard blue LED on the DOIT DevKit: flashes once per ACKed frame. -1 = off */
 #define PIN_DHT       4
 #define PIN_LDR       34
 #define PIN_I2C_SDA   21   /* ENS160 */

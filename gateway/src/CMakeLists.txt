@@ -1,3 +1,3 @@
-idf_component_register(SRCS "main.cpp" "network.cpp" "protocol.cpp" "door_controller.cpp" "hardware.cpp" "node_link.cpp" "reporting.cpp" "parking.cpp"
+idf_component_register(SRCS "main.cpp" "network.cpp" "protocol.cpp" "door_controller.cpp" "hardware.cpp" "node_link.cpp" "radio.cpp" "reporting.cpp" "parking.cpp"
     INCLUDE_DIRS "../include" "../../shared/protocol"
-    REQUIRES esp_wifi esp_event esp_netif nvs_flash mqtt json esp_timer esp_psram spi_flash lwip mbedtls esp_driver_uart esp_http_client esp_hw_support)
+    REQUIRES esp_wifi esp_event esp_netif nvs_flash mqtt json esp_timer esp_psram spi_flash lwip mbedtls esp_driver_uart esp_http_client esp_hw_support esp_driver_gpio)
