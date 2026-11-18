@@ -22,6 +22,11 @@ export default function Parking() {
         });
         if (!response.ok) throw new Error('Parking API unavailable');
         const result = await response.json();
+        if (!Object.hasOwn(labels, result?.state) ||
+            (result.state === 'UNKNOWN' ? result.occurred_at !== null :
+              typeof result.occurred_at !== 'string' || !Number.isFinite(Date.parse(result.occurred_at)))) {
+          throw new Error('Invalid parking API response');
+        }
         if (!lifetime.signal.aborted) {
           setData(result);
           setFailed(false);
@@ -46,7 +51,7 @@ export default function Parking() {
       <section className="parking-card" aria-live="polite">
         <h1>ช่องจอดรถ 1</h1>
         <p className="parking-state" data-state={data?.state}>
-          {data ? labels[data.state] : failed ? 'ยังไม่มีข้อมูล' : 'กำลังโหลด'}
+          {data ? labels[data.state] : failed ? 'ไม่ทราบสถานะ' : 'กำลังโหลด'}
         </p>
         {data?.occurred_at && (
           <p>เหตุการณ์ล่าสุด <time dateTime={data.occurred_at}>{thaiTime.format(new Date(data.occurred_at))}</time> (เวลาไทย)</p>
