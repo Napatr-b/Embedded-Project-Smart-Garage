@@ -12,6 +12,7 @@
 #include "door_controller.h"
 #include "network.h"
 #include "node_link.h"
+#include "parking.h"
 #include "protocol.h"
 #include "reporting.h"
 #include "esp_flash.h"
@@ -105,10 +106,12 @@ extern "C" void app_main() {
     return;
   }
   network::begin(queue);
+  parking::begin();
   int64_t lastReport = -3000, lastSerial = -3000;
   while (true) {
     const int64_t mono = esp_timer_get_time() / 1000;
     network::poll(mono);
+    parking::poll(mono);
     if (!network::mqttConnected())
       online = false;
 

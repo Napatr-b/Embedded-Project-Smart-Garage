@@ -1,10 +1,10 @@
 // Interface: adapter.load() -> Promise<{events, samples, source}>
-// อนาคตสร้าง HTTPS adapter ไปยัง backend ที่ได้รับสิทธิ์อ่าน Sheets
+
 export const mockHistoryAdapter = {
   async load() {
     const now = Date.now();
     return {
-      source: 'ข้อมูลตัวอย่างในหน่วยความจำ (ไม่ใช่ Google Sheets)',
+      source: 'ข้อมูลตัวอย่างในหน่วยความจำ',
       events: [
         {
           id: 's1',
@@ -30,7 +30,7 @@ export const mockHistoryAdapter = {
 export const unconfiguredHistoryAdapter = {
   async load() {
     return {
-      source: 'ยังไม่เชื่อม Google Sheets • แสดงเฉพาะข้อมูล MQTT ในรอบนี้',
+      source: 'แสดงข้อมูล MQTT ในรอบนี้',
       events: [],
       samples: [],
     };

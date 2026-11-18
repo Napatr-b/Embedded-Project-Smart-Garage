@@ -3,7 +3,7 @@
 ## Test cases
 | # | Case | Type | Steps | Expected | Result |
 |---|---|---|---|---|---|
-| T1 | Node readings reach Sheets | normal | | | |
+| T1 | Parking events reach Supabase | normal | | | |
 | T2 | Enrolled face opens door | normal | | | |
 | T3 | Unknown face, door stays closed + LINE alert | edge | | | |
 | T4 | Obstacle during closing | edge | | | |

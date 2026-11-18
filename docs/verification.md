@@ -40,7 +40,7 @@ C++: คำสั่งซ้ำ, replay หลัง bounded cache eviction, ti
 - ไม่ได้ flash, เปิด serial port, ตรวจ memory บนบอร์ดจริง หรือขยับ Servo
 - ไม่ได้ทดสอบ Wi-Fi, SNTP, TLS certificate, broker authentication/ACL, Last Will timing และ reconnect บนเครือข่ายจริง config ยังว่าง
 - ไม่ได้ทดสอบ GPIO/UART/IR/Ultrasonic/Servo/feedback/hardware stop/OV2640/ESP-WHO จริง disabled interfaces ไม่ใช่ driver ที่ใช้งานจริงแล้ว
-- Sheets/LINE ยังเป็น interface/mock/config ตัวอย่าง ไม่มีการส่ง API จริง และไม่มี credential ใน frontend
+- LINE ยังเป็น config ตัวอย่าง ส่วนการตั้งค่า Supabase สำหรับสถานะจอดรถอยู่ใน [คู่มือ](parking-mvp.md)
 - ไม่ได้ deploy Vercel
 - ยังไม่ได้ยืนยันภาพ desktop/mobile หรือ keyboard ผ่าน browser automation ในรอบนี้ รอบก่อน browser access host ไม่พร้อม และ Computer Use ยุติการเข้าถึง Chrome เพราะระบุ URL ไม่ได้แน่ชัด รอบนี้ตรวจ HTTP/build และให้ URL ระหว่างทำ ไม่อ้างว่า screenshot/visual QA ผ่าน
 

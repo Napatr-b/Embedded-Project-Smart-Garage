@@ -10,3 +10,10 @@
 // Use an approved CA PEM here, or leave empty to use ESP-IDF certificate bundle.
 #define GARAGE_MQTT_CA_PEM ""
 #define GARAGE_SNTP_SERVER "pool.ntp.org"
+// Optional parking HTTPS endpoint. Set both values in config.local.h.
+#define GARAGE_PARKING_URL ""
+#define GARAGE_PARKING_TOKEN ""
+// Calibrate these distances for the installed sensor and bay.
+#define GARAGE_PARKING_OCCUPIED_CM 60
+#define GARAGE_PARKING_VACANT_CM 80
+#define GARAGE_PARKING_STABLE_SAMPLES 3

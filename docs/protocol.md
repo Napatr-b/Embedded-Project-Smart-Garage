@@ -62,8 +62,8 @@ Delivery rate (node `delivered a/b`, gateway `delivery=`) is the packet delivery
 | `garage/<gw>/events` | gw -> cloud | door opened/closed, face matched/rejected, fault |
 | `garage/<gw>/door/cmd` | cloud -> gw | `open` / `close` / `stop` |
 
-### Google Sheets
-See `cloud/apps-script/Code.gs`.
+### ประวัติช่องจอดรถ
+Gateway ส่ง `POST /api/parking` ผ่าน HTTPS ไปยัง Backend ที่บันทึกลง Supabase ดู [สัญญา API และการตั้งค่า](parking-mvp.md)
 
 ### LINE alerts (draft)
 Door fault/timeout, unknown face at entrance, obstacle blocking close, node offline.

@@ -6,7 +6,7 @@
 
 ## ข้อกำหนดที่ยืนยันและเรื่องที่ยังไม่ยืนยัน
 
-ยืนยันจากคำขอและ proposal: Web ↔ Broker ↔ ESP32-S3; Sensor Node อ่าน LDR/DHT22/ENS160 ส่ง UART; กล้อง/IR/Ultrasonic/Servo ฝั่ง Gateway; ESP-WHO บนบอร์ด; Sheets ผ่าน HTTPS; LINE Messaging API; ไม่มี automatic closing และยังไม่กำหนดวิธีแสดงภาพกล้อง
+ยืนยันจากคำขอและ proposal: Web ↔ Broker ↔ ESP32-S3; Sensor Node อ่าน LDR/DHT22/ENS160 ส่ง UART; กล้อง/IR/Ultrasonic/Servo ฝั่ง Gateway; ESP-WHO บนบอร์ด; บันทึกสถานะจอดรถลง Supabase ผ่าน HTTPS; LINE Messaging API; ไม่มี automatic closing และยังไม่กำหนดวิธีแสดงภาพกล้อง
 
 ร่างเสนอทีม: ทุก topic/field/timeout ในหน้านี้, UART framing/CRC, ACL, authentication, threshold รถ, servo pulse/มุม, pin map, feedback, obstruction detection และการ reset Fault ต้องตกลงก่อน hardware integration
 
@@ -138,7 +138,7 @@ Packet ผิดรูปแบบที่อ่าน commandId ไม่ไ�
 {"schemaVersion":2,"deviceId":"garage-01","timestamp":"2026-11-16T03:00:04.000Z","timeSynced":true,"simulatedHardware":true,"type":"COMMAND_ACCEPTED","message":"open","commandId":null}
 ```
 
-type/message เป็น string และไม่ render เป็น HTML เว็บแสดงล่าสุด 100 รายการในรอบนั้น ไม่อ้างว่าเป็นประวัติ Sheets telemetry MQTT ที่ timestamp เก่ากว่าหรือซ้ำทั้ง packet จะไม่เพิ่มจุดกราฟซ้ำ แต่ยอมรับ state/commandId ใหม่ที่มี timestamp เท่ากัน เพื่อไม่ทิ้ง Stop ที่เกิดในมิลลิวินาทีเดียวกัน หากมี buffered history ให้ส่ง endpoint ประวัติแยกพร้อม deviceId + nodeId + sequence/eventId สำหรับ idempotent writes ไม่ส่งข้อมูลย้อนหลังลง topic telemetry สด
+type/message เป็น string และไม่ render เป็น HTML เว็บแสดงล่าสุด 100 รายการในรอบนั้น Telemetry MQTT ที่ timestamp เก่ากว่าหรือซ้ำทั้ง packet จะไม่เพิ่มจุดกราฟซ้ำ แต่ยอมรับ state/commandId ใหม่ที่มี timestamp เท่ากัน เพื่อไม่ทิ้ง Stop ที่เกิดในมิลลิวินาทีเดียวกัน หากมี buffered history ให้ส่ง endpoint ประวัติแยกพร้อม deviceId + nodeId + sequence/eventId สำหรับ idempotent writes ไม่ส่งข้อมูลย้อนหลังลง topic telemetry สด
 
 Event QoS 0 รอบนี้ยังไม่ทำ durable dedup/eventId ฝั่งคลาวด์ ต้องตกลง ID และ retention ก่อน HTTPS adapter จริง ห้ามอ้างว่า log ใน RAM เป็น durable history
 
@@ -164,17 +164,17 @@ ACK/NACK กลับเป็น JSON+CRC framing เดียวกัน:
 
 UART ใช้ binary frame ตาม `shared/protocol/garage_protocol.h` และ [protocol.md](protocol.md) (ไม่ใช่ JSON) Gateway รับใน `gateway/src/node_link.cpp` แล้วเติมค่าเข้า telemetry (`distanceCm`, temperature ฯลฯ) เมื่อไม่ได้อยู่ในโหมด simulated
 
-## Google Sheets, LINE และ authentication
+## Supabase, LINE และ authentication
 
-Web history interface เดิม: `load(): Promise<{source,events,samples}>`; demo ใช้ mock ใน RAM, MQTT ใช้ unconfigured adapter ไม่เรียก Google Sheets. Gateway ยังไม่มี history/LINE sink มีแค่ config endpoint ตัวอย่าง ไม่มี HTTPS call จริงในรอบนี้
+หน้า MQTT ใช้ข้อมูลในรอบปัจจุบัน ส่วนโหมด Demo ใช้ข้อมูลตัวอย่างในหน่วยความจำ หน้าแรกอ่านสถานะจอดรถจาก Backend
 
-เส้นทางที่เสนอ: Gateway → HTTPS endpoint ของทีม → เขียน raw readings/Event Log ลง Sheets; เว็บอ่าน read-only backend ที่ตรวจสิทธิ์ จำกัดจำนวน และจัดการ CORS Backend หรือ Gateway ส่ง LINE Messaging API พร้อม cooldown กันซ้ำ เก็บ token/key ฝั่ง server หรือ credential store ของอุปกรณ์ที่ออกแบบแล้ว ไม่ส่งให้ browser
+Gateway ส่งสถานะจอดรถทาง HTTPS ไปที่ Backend ซึ่งบันทึกลง Supabase ตาม [คู่มือ](parking-mvp.md) ตารางค่าจากเซนเซอร์และคำสั่งประตูเตรียมไว้ใน SQL migration ส่วน LINE Messaging API ยังอยู่ในแผน
 
-`VITE_*` ทุกค่าถูกส่งไป browser ไม่ใช่ที่เก็บ secret ห้ามใส่ LINE token / Google service-account key / MQTT password ถาวรใน frontend `.env` ไม่ช่วยซ่อน VITE_ เว็บยังรอระบบ login/short-lived WSS authentication หรือ backend proxy ที่ตรวจสิทธิ์ ก่อนใช้จริง
+`VITE_*` ทุกค่าถูกส่งไป browser ไม่ใช่ที่เก็บ secret ห้ามใส่ LINE token / Supabase secret key / MQTT password ถาวรใน frontend `.env` ไม่ช่วยซ่อน VITE_ เว็บยังรอระบบ login/short-lived WSS authentication หรือ backend proxy ที่ตรวจสิทธิ์ ก่อนใช้จริง
 
 ACL ขั้นต่ำ: browser publish เฉพาะ command ของ device ที่ตนมีสิทธิ์ และ subscribe เฉพาะ telemetry/status/ack/event ของ device นั้น; Gateway มีสิทธิ์กลับด้าน จำกัดขนาด/rate และห้าม public anonymous broker ควบคุม actuator จริง Firmware sample บังคับ mqtts + per-device username/password หรือปรับเป็น mTLS หลังทีมทบทวน (mTLS ยังไม่ implement)
 
-ขอจากเพื่อนก่อนเชื่อม: endpoint ทั้งสองแบบ, CA chain, deviceId, credentials/ACL, contract version/payload จริง, NTP, thresholds/calibration/validity, GPIO/camera map, interlocks/feedback/servo power, stop/reset behavior, Sheets endpoint/schema/idempotency, LINE recipient/token owner และนโยบายเก็บข้อมูลใบหน้า
+ขอจากเพื่อนก่อนเชื่อม: endpoint ทั้งสองแบบ, CA chain, deviceId, credentials/ACL, contract version/payload จริง, NTP, thresholds/calibration/validity, GPIO/camera map, interlocks/feedback/servo power, stop/reset behavior, LINE recipient/token owner และนโยบายเก็บข้อมูลใบหน้า
 
 ## Door motion schema v2
 

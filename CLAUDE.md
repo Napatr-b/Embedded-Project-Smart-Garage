@@ -27,11 +27,11 @@ Pin notes: on the N16R8, **GPIO35–37 are used by PSRAM**, so don't assign them
 - PlatformIO in VS Code.
 - Gateway: `framework = espidf` (ESP-WHO face recognition is an ESP-IDF project; current Arduino cores dropped face recognition). Arduino-as-IDF-component is an option.
 - Sensor Node: PlatformIO + Arduino.
-- Cloud: Google Sheets via an HTTPS endpoint (logging), MQTT for status and commands (browser dashboard needs MQTT over WSS), Vercel web dashboard, LINE Messaging API for alerts.
+- Cloud: Supabase PostgreSQL via the parking HTTPS endpoint, MQTT for status and commands (browser dashboard needs MQTT over WSS), Vercel web dashboard, LINE Messaging API for alerts.
 
 ## Rules that must hold
 
-- **Never commit secrets** (Wi-Fi passwords, API keys, MQTT credentials, LINE tokens, Apps Script URLs with keys). Put them in a git-ignored file such as `secrets.h` / `.env` and commit a `*.example` template instead. This is also rubric item E5.
+- **Never commit secrets** (Wi-Fi passwords, API keys, MQTT credentials, LINE tokens, device tokens and Supabase secret keys). Put them in a git-ignored file such as `secrets.h` / `.env` and commit a `*.example` template instead. This is also rubric item E5.
 - Every UART/MQTT message carries a **node ID** (scalability score) and a sequence number. The UART frame also has a checksum, with ACK/retry (E4).
 - Moving parts need a safe stop: movement timeout + Stop command + obstruction interlock. Door states: Closed, Opening, Open, Closing, Fault. Manual dashboard commands must still honor local interlocks.
 - The Gateway buffers readings and events while the cloud is unreachable and replays them on reconnect (E4).
@@ -45,7 +45,7 @@ Pin notes: on the N16R8, **GPIO35–37 are used by PSRAM**, so don't assign them
 
 ## Deadlines
 
-- **Fri 20 Nov 2026**: checkpoint video (≤2 min) showing sensor node → gateway → cloud → dashboard. Priority: UART between the boards, then Sheets logging, then a basic dashboard. Bench-test the camera in parallel.
+- **Fri 20 Nov 2026**: checkpoint video (≤2 min) showing sensor node → gateway → cloud → dashboard. Priority: UART between the boards, then parking event logging, then a basic dashboard. Bench-test the camera in parallel.
 - **Tue 8 Dec 2026**: final demo, report (≤10 pages), video, source + repo link.
 
 ## Status (as of 11 Nov 2026)
@@ -58,7 +58,7 @@ Proposal submitted. Parts still being bought. **No code yet, nothing tested.** T
 gateway/        PlatformIO, ESP-IDF (ESP32-S3), C++. One file per feature: node_link (UART), network (MQTT), door_controller, reporting...
 sensor-node/    PlatformIO, Arduino (ESP32 DOIT). One file per feature: link (UART ACK/retry), ultrasonic, env_sensors
 shared/protocol garage_protocol.h: UART frame, CRC16, parser (used by both firmwares)
-cloud/          apps-script/Code.gs (Sheets logger), MQTT/LINE notes
+cloud/          MQTT/LINE notes
 dashboard/      React + Vite web app (demo mode + MQTT mode)
 docs/           handoff, proposal, protocol.md, pin-map.md (PROVISIONAL), test-plan.md
 ```

@@ -1,6 +1,6 @@
-﻿# Web Dashboard
+# Web Dashboard
 
-เปิด Terminal ที่โฟลเดอร์นี้แล้วรัน `npm.cmd install` และ `npm.cmd run dev` เปิด URL ที่ Vite แสดง หยุดด้วย Ctrl+C เริ่มต้น Demo Mode โดยไม่ต้องมีบัญชี/บอร์ด
+รัน `npm.cmd ci` แล้วตั้งค่า Backend ตาม [คู่มือช่องจอดรถ](../docs/parking-mvp.md) จากนั้นรัน `npm.cmd run dev` หน้าแรกแสดงสถานะช่องจอดรถ ลิงก์แดชบอร์ด MQTT เปิดหน้าเดิมที่มี Demo Mode
 
 ทดสอบ `npm.cmd test` และ `npm.cmd run build` โหมด MQTT ใช้ WSS ตั้งค่าจาก `.env.example` ห้ามใส่ secret ใน VITE_* เพราะ browser อ่านได้
 

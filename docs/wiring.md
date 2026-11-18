@@ -14,7 +14,7 @@ flowchart LR
   Gateway <-->|MQTTS + TLS| Broker[MQTT Broker + ACL]
   Broker <-->|WSS| Web[React Dashboard / Vercel]
   Gateway -. HTTPS interface .-> Backend[Backend ของทีม]
-  Backend -.-> Sheets[Google Sheets]
+  Backend --> DB[Supabase PostgreSQL]
   Backend -.-> LINE[LINE Messaging API]
 ```
 

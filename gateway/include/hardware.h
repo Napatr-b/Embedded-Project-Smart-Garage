@@ -7,6 +7,7 @@ struct SensorSnapshot {
   double temperature = NAN, humidity = NAN, ldrRaw = NAN, aqi = NAN, tvocPpb = NAN, eco2Ppm = NAN,
          distanceCm = NAN;
   int occupied = -1, ledOn = -1;
+  int64_t ultrasonicSampleMs = -1;
 };
 // Simulated values when simulated=true; otherwise all fields unavailable until real drivers exist.
 SensorSnapshot sampleHardware(bool simulated, int64_t monotonicMs);

@@ -1,10 +1,10 @@
 # บทสาธิต Smart Garage ประมาณ 3 นาที
 
-เตรียม: เปิด Terminal ที่ `smart-garage/web` แล้วรัน `npm.cmd run dev` เปิด URL ที่ Terminal แสดง เลือก Demo Mode แล้วกดรีเซ็ตเดโม ไม่ต้องใช้ ESP32, broker, บัญชี, Sheets หรือ LINE ป้าย “ข้อมูลจำลอง” ต้องเห็นชัด
+เตรียม: เปิด Terminal ที่ `dashboard` แล้วรัน `npm.cmd run dev` เปิด URL ที่ Terminal แสดง เลือก Demo Mode แล้วกดรีเซ็ตเดโม ไม่ต้องใช้ ESP32, broker, บัญชี หรือ LINE ป้าย “ข้อมูลจำลอง” ต้องเห็นชัด
 
 ## 0:00–0:30 ภาพรวม
 
-“Smart Garage เป็นงาน Embedded System ของกลุ่มนอนน้อยนอนไม่พอ Sensor Node อ่าน LDR, DHT22, ENS160 ส่ง UART ให้ Gateway ESP32-S3 เว็บคุย Gateway ผ่าน MQTT วันนี้ใช้ข้อมูลจำลอง ไม่ใช่อุปกรณ์จริงหรือประวัติจาก Sheets”
+“Smart Garage เป็นงาน Embedded System ของกลุ่มนอนน้อยนอนไม่พอ Sensor Node อ่าน LDR, DHT22, ENS160 ส่ง UART ให้ Gateway ESP32-S3 เว็บคุย Gateway ผ่าน MQTT วันนี้ใช้ข้อมูลจำลอง สำหรับสาธิตโดยไม่ต่ออุปกรณ์”
 
 ชี้ Broker กับ Gateway ที่แยกกัน และเวลาข้อมูลล่าสุด เขตเวลา Asia/Bangkok
 
@@ -36,7 +36,7 @@
 
 เลือก MQTT Mode โดยยังไม่มี `.env` → แสดงยังไม่ตั้งค่า ไม่มีข้อมูล และปุ่ม disabled
 
-“โหมดนี้เป็นโครง integration ต้องตกลง WSS, topics, payload, authentication และ ACL กับเพื่อนก่อน ร่างอยู่ใน integration-contract.md ใช้ commandId และ timeout 8 วินาที ไม่มี motor retry อัตโนมัติ ประวัติจริงจะเก็บ Sheets ผ่าน HTTPS และ LINE ส่งจาก Gateway/backend โดยไม่ใส่ token ใน frontend วันนี้ยังไม่ได้เชื่อมบริการจริงและยังไม่ deploy”
+“โหมดนี้เป็นโครง integration ต้องตกลง WSS, topics, payload, authentication และ ACL กับเพื่อนก่อน ร่างอยู่ใน integration-contract.md ใช้ commandId และ timeout 8 วินาที ไม่มี motor retry อัตโนมัติ สถานะจอดรถเขียนลง Supabase ผ่าน Backend ส่วน LINE ยังอยู่ในแผน”
 
 กลับ Demo Mode และจบด้วยภาพรวมโครงการ
 

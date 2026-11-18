@@ -166,9 +166,11 @@ void fill(SensorSnapshot &s, int64_t monotonicMs) {
   const Latest copy = latest;
   xSemaphoreGive(latestLock);
 
-  if (copy.hasUltrasonic && monotonicMs - copy.ultrasonicMs <= kStaleMs &&
-      copy.ultrasonic.status == GP_US_OK)
-    s.distanceCm = copy.ultrasonic.distance_mm / 10.0;
+  if (copy.hasUltrasonic && monotonicMs - copy.ultrasonicMs <= kStaleMs) {
+    s.ultrasonicSampleMs = copy.ultrasonicMs;
+    if (copy.ultrasonic.status == GP_US_OK)
+      s.distanceCm = copy.ultrasonic.distance_mm / 10.0;
+  }
 
   if (copy.hasReadings && monotonicMs - copy.readingsMs <= kStaleMs) {
     const auto &r = copy.readings;
