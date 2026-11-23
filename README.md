@@ -13,6 +13,7 @@ Miniature smart garage: a sliding door that opens for enrolled faces (on-device 
 
 ```
 gateway/        ESP32-S3 N16R8, PlatformIO + ESP-IDF
+camera-test/    OV2640 DVP JPEG capture test for Gateway ESP32-S3 N16R8
 sensor-node/    ESP32 DOIT DevKit, PlatformIO + Arduino
 shared/         UART protocol shared by both firmwares
 cloud/          บันทึกการตั้งค่า MQTT / LINE
@@ -22,6 +23,8 @@ docs/           Design handoff, proposal, protocol, pin map, test plan
 ```
 
 ## Getting started
+
+For camera wiring configuration and a USB JPEG capture test, see [Camera bring-up](camera-test/README.md).
 
 1. Install VS Code + PlatformIO.
 2. Open `gateway/` or `sensor-node/` as a PlatformIO project, then Build / Upload.
